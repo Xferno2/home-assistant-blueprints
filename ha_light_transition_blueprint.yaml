@@ -85,16 +85,16 @@ blueprint:
           min: 1
           max: 60
           unit_of_measurement: seconds
-  curve_type:
-    name: Curve Type
-    description: The type of curve for the transition
-    default: "linear"
-    selector:
-      select:
-        options:
-          - linear
-          - exponential
-          - logarithmic
+    curve_type:
+      name: Curve Type
+      description: The type of curve for the transition
+      default: "linear"
+      selector:
+        select:
+          options:
+            - linear
+            - exponential
+            - logarithmic
 
 variables:
   light_entity: !input light_entity
