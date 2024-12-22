@@ -131,7 +131,7 @@ sequence:
       while:
         - condition: template
           value_template: "{{
-            repeat.index < steps and
+            repeat.index <= steps and
             states(light_entity) == 'on'
             }}"
       sequence:
