@@ -128,13 +128,13 @@ sequence:
 
   # Perform the transition
   - repeat:
-      until:
+      while:
         - condition: template
           value_template: "{{
-            repeat.index >= steps or
-            states(light_entity) == 'off' or
-            states(light_entity) == 'unavailable' or
-            states(light_entity) == 'unknown'
+            repeat.index < steps and
+            states(light_entity) != 'off' and
+            states(light_entity) != 'unavailable' and
+            states(light_entity) != 'unknown'
             }}"
       sequence:
         - choose:
