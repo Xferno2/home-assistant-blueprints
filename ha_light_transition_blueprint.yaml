@@ -14,6 +14,7 @@ blueprint:
     color_mode:
       name: Color Mode
       description: Choose between RGB or Temprature color mode.
+      default: "RGB"
       selector:
         select:
           options:
@@ -126,7 +127,8 @@ sequence:
       count: "{{ steps }}"
       sequence:
         - if:
-            - conditions:
+            - condition: or
+              conditions:
                 - condition: state
                   entity_id: !input light_entity
                   state: "off"
