@@ -4,8 +4,9 @@ blueprint:
     Turns on a light to a specified RGB/Temp color and brightness, then transitions to a new brightness and color over a set amount of time.
   author: Mirai-Miki
   source_url: https://github.com/Mirai-Miki/home-assistant-blueprints/blob/main/ha_light_transition_blueprint.yaml
+  min_version: 2024.6.0
   domain: script
-  input:
+  fields:
     light_entity:
       name: Light
       description: The light entity to control.
@@ -99,20 +100,20 @@ sequence:
         sequence:
           - service: light.turn_on
             target:
-              entity_id: !input light_entity
+              entity_id: "{{ light_entity }}"
             data:
               brightness: "{{ i_brightness }}"
-              rgb_color: !input initial_color
+              rgb_color: "{{ initial_color }}"
       - conditions:
           - condition: template
             value_template: "{{ color_mode == 'Temperature' }}"
         sequence:
           - service: light.turn_on
             target:
-              entity_id: !input light_entity
+              entity_id: "{{ light_entity }}"
             data:
               brightness: "{{ i_brightness }}"
-              kelvin: !input initial_temp
+              kelvin: "{{ initial_temp }}"
 
   # Perform the transition
   - repeat:
@@ -127,13 +128,13 @@ sequence:
             - condition: or
               conditions:
                 - condition: state
-                  entity_id: !input light_entity
+                  entity_id: "{{ light_entity }}"
                   state: "off"
                 - condition: state
-                  entity_id: !input light_entity
+                  entity_id: "{{ light_entity }}"
                   state: unavailable
                 - condition: state
-                  entity_id: !input light_entity
+                  entity_id: "{{ light_entity }}"
                   state: unknown
           then:
             - stop: "Light turned off, stopping transition"
@@ -144,7 +145,7 @@ sequence:
               sequence:
                 - service: light.turn_on
                   target:
-                    entity_id: !input light_entity
+                    entity_id: "{{ light_entity }}"
                   data:
                     brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
                     rgb_color:
@@ -157,9 +158,9 @@ sequence:
               sequence:
                 - service: light.turn_on
                   target:
-                    entity_id: !input light_entity
+                    entity_id: "{{ light_entity }}"
                   data:
                     brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
                     kelvin: "{{ (int(initial_temp) + (repeat.index * temp_step)) | int }}"
         - delay:
-            seconds: !input step_time
+            seconds: "{{ step_time }}"
