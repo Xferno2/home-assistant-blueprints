@@ -85,12 +85,23 @@ blueprint:
           min: 1
           max: 60
           unit_of_measurement: seconds
+  curve_type:
+    name: Curve Type
+    description: The type of curve for the transition
+    default: "linear"
+    selector:
+      select:
+        options:
+          - linear
+          - exponential
+          - logarithmic
 
 variables:
   light_entity: !input light_entity
   step_time: !input step_time
   transition_time: !input transition_time
   color_mode: !input color_mode
+  curve_type: !input curve_type
   initial_temp: !input initial_temp
   target_temp: !input target_temp
   initial_color: !input initial_color
@@ -139,16 +150,43 @@ sequence:
             - conditions:
                 - condition: template
                   value_template: "{{ color_mode == 'RGB' }}"
-              sequence:
                 - service: light.turn_on
                   target:
                     entity_id: !input light_entity
                   data:
-                    brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
+                    brightness: >
+                      {% if curve_type == 'linear' %}
+                        {{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}
+                      {% elif curve_type == 'exponential' %}
+                        {{ (int(i_brightness) * (1 + repeat.index / steps)) | int }}
+                      {% elif curve_type == 'logarithmic' %}
+                        {{ (int(i_brightness) + (math.log(1 + repeat.index) * brightness_step)) | int }}
+                      {% endif %}
                     rgb_color:
-                      - "{{ (initial_color[0] + ((target_color[0] - initial_color[0]) / steps) * repeat.index) | int }}"
-                      - "{{ (initial_color[1] + ((target_color[1] - initial_color[1]) / steps) * repeat.index) | int }}"
-                      - "{{ (initial_color[2] + ((target_color[2] - initial_color[2]) / steps) * repeat.index) | int }}"
+                      - >
+                        {% if curve_type == 'linear' %}
+                          {{ (initial_color[0] + ((target_color[0] - initial_color[0]) / steps) * repeat.index) | int }}
+                        {% elif curve_type == 'exponential' %}
+                          {{ (initial_color[0] * (1 + repeat.index / steps)) | int }}
+                        {% elif curve_type == 'logarithmic' %}
+                          {{ (initial_color[0] + (math.log(1 + repeat.index) * ((target_color[0] - initial_color[0]) / steps))) | int }}
+                        {% endif %}
+                      - >
+                        {% if curve_type == 'linear' %}
+                          {{ (initial_color[1] + ((target_color[1] - initial_color[1]) / steps) * repeat.index) | int }}
+                        {% elif curve_type == 'exponential' %}
+                          {{ (initial_color[1] * (1 + repeat.index / steps)) | int }}
+                        {% elif curve_type == 'logarithmic' %}
+                          {{ (initial_color[1] + (math.log(1 + repeat.index) * ((target_color[1] - initial_color[1]) / steps))) | int }}
+                        {% endif %}
+                      - >
+                        {% if curve_type == 'linear' %}
+                          {{ (initial_color[2] + ((target_color[2] - initial_color[2]) / steps) * repeat.index) | int }}
+                        {% elif curve_type == 'exponential' %}
+                          {{ (initial_color[2] * (1 + repeat.index / steps)) | int }}
+                        {% elif curve_type == 'logarithmic' %}
+                          {{ (initial_color[2] + (math.log(1 + repeat.index) * ((target_color[2] - initial_color[2]) / steps))) | int }}
+                        {% endif %}
             - conditions:
                 - condition: template
                   value_template: "{{ color_mode == 'Temperature' }}"
@@ -157,7 +195,21 @@ sequence:
                   target:
                     entity_id: !input light_entity
                   data:
-                    brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
-                    kelvin: "{{ (int(initial_temp) + (repeat.index * temp_step)) | int }}"
+                    brightness: >
+                      {% if curve_type == 'linear' %}
+                        {{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}
+                      {% elif curve_type == 'exponential' %}
+                        {{ (int(i_brightness) * (1 + repeat.index / steps)) | int }}
+                      {% elif curve_type == 'logarithmic' %}
+                        {{ (int(i_brightness) + (math.log(1 + repeat.index) * brightness_step)) | int }}
+                      {% endif %}
+                    kelvin: >
+                      {% if curve_type == 'linear' %}
+                        {{ (int(initial_temp) + (repeat.index * temp_step)) | int }}
+                      {% elif curve_type == 'exponential' %}
+                        {{ (int(initial_temp) * (1 + repeat.index / steps)) | int }}
+                      {% elif curve_type == 'logarithmic' %}
+                        {{ (int(initial_temp) + (math.log(1 + repeat.index) * temp_step)) | int }}
+                      {% endif %}
         - delay:
             seconds: !input step_time
