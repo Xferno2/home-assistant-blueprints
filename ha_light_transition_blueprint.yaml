@@ -2,9 +2,9 @@ blueprint:
   name: Light Transition Effect
   description: |
     Turns on a light to a specified RGB/Temp color and brightness, then transitions to a new brightness and color over a set amount of time.
-  author: Mirai-Miki
-  source_url: https://github.com/Mirai-Miki/home-assistant-blueprints/blob/main/ha_light_transition_blueprint.yaml
-  min_version: 2024.6.0
+  author: "Mirai-Miki"
+  homeassistant:
+    min_version: 2024.6.0
   domain: script
 fields:
   light_entity:
