@@ -1,8 +1,7 @@
 blueprint:
   name: Light Transition Effect
   description: |
-    Turns on a light to a specified RGB color and brightness, then transitions
-    to a new brightness and color over a set amount of time.
+    Turns on a light to a specified RGB/Temp color and brightness, then transitions to a new brightness and color over a set amount of time.
   author: Mirai-Miki
   source_url: https://github.com/Mirai-Miki/home-assistant-blueprints/blob/main/ha_light_transition_blueprint.yaml
   domain: script
@@ -86,15 +85,6 @@ blueprint:
           unit_of_measurement: seconds
 
 variables:
-  step_time: !input step_time
-  transition_time: !input transition_time
-  color_mode: !input color_mode
-  initial_temp: !input initial_temp
-  target_temp: !input target_temp
-  initial_color: !input initial_color
-  target_color: !input target_color
-  initial_brightness: !input initial_brightness
-  target_brightness: !input target_brightness
   i_brightness: "{{ ((int(initial_brightness) / 100) * 255) | int }}"
   t_brightness: "{{ ((int(target_brightness) / 100) * 255) | int }}"
   steps: "{{ (int(transition_time) / int(step_time)) | int }}"
@@ -126,7 +116,12 @@ sequence:
 
   # Perform the transition
   - repeat:
-      count: "{{ steps }}"
+      while:
+        - condition: template
+          value_template: "{{ repeat.index < steps and
+            states(light_entity) != 'off' and
+            states(light_entity) != 'unavailable' and
+            states(light_entity) != 'unknown' }}"
       sequence:
         - if:
             - condition: or
