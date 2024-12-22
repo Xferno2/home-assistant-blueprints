@@ -1,0 +1,166 @@
+blueprint:
+  name: Light Transition Effect
+  description: |
+    Turns on a light to a specified RGB color and brightness, then transitions
+    to a new brightness and color over a set amount of time.
+  domain: script
+  input:
+    light_entity:
+      name: Light
+      description: The light entity to control.
+      selector:
+        entity:
+          domain: light
+    color_mode:
+      name: Color Mode
+      description: Choose between RGB or Temprature color mode.
+      selector:
+        select:
+          options:
+            - RGB
+            - Temperature
+    initial_color:
+      name: Initial Color (RGB)
+      description: Initial RGB color of the light.
+      default: [255, 0, 0] # Default to red
+      selector:
+        color_rgb: {}
+    target_color:
+      name: Target Color (RGB)
+      description: Target RGB color.
+      default: [255, 0, 0] # Default to red
+      selector:
+        color_rgb: {}
+    initial_temp:
+      name: Initial Temperature
+      description: Initial color temperature of the light in Kelvin.
+      default: 2700 # Default to Warm
+      selector:
+        color_temp:
+          unit: "kelvin"
+    target_temp:
+      name: Target Temperature
+      description: Target color temperature in Kelvin.
+      default: 6500 # Default to daylight
+      selector:
+        color_temp:
+          unit: "kelvin"
+    initial_brightness:
+      name: Initial Brightness
+      description: Initial brightness of the light.
+      default: 1 # Default to 1% brightness
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    target_brightness:
+      name: Target Brightness
+      description: Final brightness of the light.
+      default: 100 # Default to 100% brightness
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    transition_time:
+      name: Transition Time
+      description: Time for the transition in seconds.
+      default: 10 # Default to a 10-second transition
+      selector:
+        number:
+          min: 1
+          max: 3600 # 1 hour
+          unit_of_measurement: seconds
+    step_time:
+      name: Step Time
+      description: Time between each transition step in seconds.
+      default: 1 # Default to a 1-second transition
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: seconds
+
+variables:
+  step_time: !input step_time
+  transition_time: !input transition_time
+  color_mode: !input color_mode
+  initial_temp: !input initial_temp
+  target_temp: !input target_temp
+  initial_color: !input initial_color
+  target_color: !input target_color
+  initial_brightness: !input initial_brightness
+  target_brightness: !input target_brightness
+  i_brightness: "{{ ((int(initial_brightness) / 100) * 255) | int }}"
+  t_brightness: "{{ ((int(target_brightness) / 100) * 255) | int }}"
+  steps: "{{ (int(transition_time) / int(step_time)) | int }}"
+  brightness_step: "{{ (int(t_brightness) - int(i_brightness)) / steps }}"
+  temp_step: "{{ (int(target_temp) - int(initial_temp)) / steps }}"
+
+sequence:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ color_mode == 'RGB' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light_entity
+            data:
+              brightness: "{{ i_brightness }}"
+              rgb_color: !input initial_color
+      - conditions:
+          - condition: template
+            value_template: "{{ color_mode == 'Temperature' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light_entity
+            data:
+              brightness: "{{ i_brightness }}"
+              kelvin: !input initial_temp
+
+  # Perform the transition
+  - repeat:
+      count: "{{ steps }}"
+      sequence:
+        - if:
+            - conditions:
+                - condition: state
+                  entity_id: !input light_entity
+                  state: "off"
+                - condition: state
+                  entity_id: !input light_entity
+                  state: unavailable
+                - condition: state
+                  entity_id: !input light_entity
+                  state: unknown
+          then:
+            - stop: "Light turned off, stopping transition"
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ color_mode == 'RGB' }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: !input light_entity
+                  data:
+                    brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
+                    rgb_color:
+                      - "{{ (initial_color[0] + ((target_color[0] - initial_color[0]) / steps) * repeat.index) | int }}"
+                      - "{{ (initial_color[1] + ((target_color[1] - initial_color[1]) / steps) * repeat.index) | int }}"
+                      - "{{ (initial_color[2] + ((target_color[2] - initial_color[2]) / steps) * repeat.index) | int }}"
+            - conditions:
+                - condition: template
+                  value_template: "{{ color_mode == 'Temperature' }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: !input light_entity
+                  data:
+                    brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
+                    kelvin: "{{ (int(initial_temp) + (repeat.index * temp_step)) | int }}"
+        - delay:
+            seconds: !input step_time
