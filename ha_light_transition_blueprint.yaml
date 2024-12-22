@@ -132,9 +132,7 @@ sequence:
         - condition: template
           value_template: "{{
             repeat.index < steps and
-            states(light_entity) != 'off' and
-            states(light_entity) != 'unavailable' and
-            states(light_entity) != 'unknown'
+            states(light_entity) == 'on'
             }}"
       sequence:
         - choose:
