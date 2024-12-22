@@ -70,12 +70,10 @@ blueprint:
     transition_time:
       name: Transition Time
       description: Time for the transition in seconds.
-      default: 10 # Default to a 10-second transition
+      default:
+        minutes: 1 # Default to 60 seconds
       selector:
-        number:
-          min: 1
-          max: 3600 # 1 hour
-          unit_of_measurement: seconds
+        duration: {}
     step_time:
       name: Step Time
       description: Time between each transition step in seconds.
@@ -99,7 +97,7 @@ variables:
   target_brightness: !input target_brightness
   i_brightness: "{{ ((int(initial_brightness) / 100) * 255) | int }}"
   t_brightness: "{{ ((int(target_brightness) / 100) * 255) | int }}"
-  steps: "{{ (int(transition_time) / int(step_time)) | int }}"
+  steps: "{{ ( int(transition_time.seconds | default(0)) + (int(transition_time.minutes | default(0)) * 60) + (int(transition_time.hours | default(0)) * 3600) ) / int(step_time) | int }}"
   brightness_step: "{{ (int(t_brightness) - int(i_brightness)) / steps }}"
   temp_step: "{{ (int(target_temp) - int(initial_temp)) / steps }}"
 
