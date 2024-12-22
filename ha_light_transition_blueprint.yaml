@@ -6,84 +6,84 @@ blueprint:
   source_url: https://github.com/Mirai-Miki/home-assistant-blueprints/blob/main/ha_light_transition_blueprint.yaml
   min_version: 2024.6.0
   domain: script
-  fields:
-    light_entity:
-      name: Light
-      description: The light entity to control.
-      selector:
-        entity:
-          domain: light
-    color_mode:
-      name: Color Mode
-      description: Choose between RGB or Temprature color mode.
-      default: "RGB"
-      selector:
-        select:
-          options:
-            - RGB
-            - Temperature
-    initial_color:
-      name: Initial Color (RGB)
-      description: Initial RGB color of the light.
-      default: [255, 0, 0] # Default to red
-      selector:
-        color_rgb: {}
-    target_color:
-      name: Target Color (RGB)
-      description: Target RGB color.
-      default: [255, 0, 0] # Default to red
-      selector:
-        color_rgb: {}
-    initial_temp:
-      name: Initial Temperature
-      description: Initial color temperature of the light in Kelvin.
-      default: 2700 # Default to Warm
-      selector:
-        color_temp:
-          unit: "kelvin"
-    target_temp:
-      name: Target Temperature
-      description: Target color temperature in Kelvin.
-      default: 6500 # Default to daylight
-      selector:
-        color_temp:
-          unit: "kelvin"
-    initial_brightness:
-      name: Initial Brightness
-      description: Initial brightness of the light.
-      default: 1 # Default to 1% brightness
-      selector:
-        number:
-          min: 1
-          max: 100
-          unit_of_measurement: "%"
-    target_brightness:
-      name: Target Brightness
-      description: Final brightness of the light.
-      default: 100 # Default to 100% brightness
-      selector:
-        number:
-          min: 1
-          max: 100
-          unit_of_measurement: "%"
-    transition_time:
-      name: Transition Time
-      description: Time for the transition in seconds.
-      default: 10 # Default to a 10-second transition
-      selector:
-        number:
-          min: 1
-          max: 3600 # 1 hour
-          unit_of_measurement: seconds
-    step_time:
-      name: Step Time
-      description: Time between each transition step in seconds.
-      default: 1 # Default to a 1-second transition
-      selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: seconds
+fields:
+  light_entity:
+    name: Light
+    description: The light entity to control.
+    selector:
+      entity:
+        domain: light
+  color_mode:
+    name: Color Mode
+    description: Choose between RGB or Temprature color mode.
+    default: "RGB"
+    selector:
+      select:
+        options:
+          - RGB
+          - Temperature
+  initial_color:
+    name: Initial Color (RGB)
+    description: Initial RGB color of the light.
+    default: [255, 0, 0] # Default to red
+    selector:
+      color_rgb: {}
+  target_color:
+    name: Target Color (RGB)
+    description: Target RGB color.
+    default: [255, 0, 0] # Default to red
+    selector:
+      color_rgb: {}
+  initial_temp:
+    name: Initial Temperature
+    description: Initial color temperature of the light in Kelvin.
+    default: 2700 # Default to Warm
+    selector:
+      color_temp:
+        unit: "kelvin"
+  target_temp:
+    name: Target Temperature
+    description: Target color temperature in Kelvin.
+    default: 6500 # Default to daylight
+    selector:
+      color_temp:
+        unit: "kelvin"
+  initial_brightness:
+    name: Initial Brightness
+    description: Initial brightness of the light.
+    default: 1 # Default to 1% brightness
+    selector:
+      number:
+        min: 1
+        max: 100
+        unit_of_measurement: "%"
+  target_brightness:
+    name: Target Brightness
+    description: Final brightness of the light.
+    default: 100 # Default to 100% brightness
+    selector:
+      number:
+        min: 1
+        max: 100
+        unit_of_measurement: "%"
+  transition_time:
+    name: Transition Time
+    description: Time for the transition in seconds.
+    default: 10 # Default to a 10-second transition
+    selector:
+      number:
+        min: 1
+        max: 3600 # 1 hour
+        unit_of_measurement: seconds
+  step_time:
+    name: Step Time
+    description: Time between each transition step in seconds.
+    default: 1 # Default to a 1-second transition
+    selector:
+      number:
+        min: 1
+        max: 60
+        unit_of_measurement: seconds
 
 variables:
   i_brightness: "{{ ((int(initial_brightness) / 100) * 255) | int }}"
