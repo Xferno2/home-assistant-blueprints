@@ -102,6 +102,12 @@ variables:
   temp_step: "{{ (int(target_temp) - int(initial_temp)) / steps }}"
 
 sequence:
+  # Check if light is already on
+  - condition: template
+    value_template: "{{ states(light_entity) != 'on' }}"
+    enabled: true
+
+  # Only continue if light was off
   - choose:
       - conditions:
           - condition: template
@@ -123,6 +129,15 @@ sequence:
             data:
               brightness: "{{ i_brightness }}"
               kelvin: !input initial_temp
+
+  # Wait for light to turn on
+  - wait_for_trigger:
+      - platform: state
+        entity_id: !input light_entity
+        to: "on"
+    timeout:
+      seconds: 10
+    continue_on_timeout: false
 
   # Perform the transition
   - repeat:
