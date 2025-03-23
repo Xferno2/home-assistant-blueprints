@@ -149,7 +149,7 @@ sequence:
               entity_id: !input light_entity
             data:
               brightness: "{{ i_brightness }}"
-              kelvin: "{{ state_attr(''!input adaptative_light_entity'', 'color_temp_kelvin' }}"
+              kelvin: "{{ state_attr('!input adaptative_light_entity', 'color_temp_kelvin') }}"
 
   # Wait for light to turn on
   - wait_for_trigger:
@@ -184,6 +184,7 @@ sequence:
                       - "{{ (initial_color[0] + ((target_color[0] - initial_color[0]) / steps) * repeat.index) | int }}"
                       - "{{ (initial_color[1] + ((target_color[1] - initial_color[1]) / steps) * repeat.index) | int }}"
                       - "{{ (initial_color[2] + ((target_color[2] - initial_color[2]) / steps) * repeat.index) | int }}"
+
             - conditions:
                 - condition: template
                   value_template: "{{ color_mode == 'Temperature' }}"
@@ -195,6 +196,7 @@ sequence:
                   data:
                     brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
                     kelvin: "{{ (int(initial_temp) + (repeat.index * temp_step)) | int }}"
+
             - conditions:
                 - condition: template
                   value_template: "{{ color_mode == 'Adaptative' }}"
@@ -205,6 +207,6 @@ sequence:
                     entity_id: !input light_entity
                   data:
                     brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
-                    kelvin: "{{ state_attr(''!input adaptative_light_entity'', 'color_temp_kelvin' }}"
+                    kelvin: "{{ state_attr('!input adaptative_light_entity', 'color_temp_kelvin' )}}"
         - delay:
             seconds: !input step_time
