@@ -14,6 +14,12 @@ blueprint:
       selector:
         entity:
           domain: light
+    adaptative_light_entity:
+      name: Adaptative Light to get Temp
+      description: Reference to addaptative light
+      selector:
+        entity:
+          domain: switch
     color_mode:
       name: Color Mode
       description: Choose between RGB or Temprature color mode.
@@ -23,6 +29,7 @@ blueprint:
           options:
             - RGB
             - Temperature
+            - Adaptative
     initial_color:
       name: Initial Color (RGB)
       description: Initial RGB color of the light.
@@ -86,6 +93,7 @@ blueprint:
 
 variables:
   light_entity: !input light_entity
+  adaptative_entity: !input adaptative_light_entity
   step_time: !input step_time
   transition_time: !input transition_time
   color_mode: !input color_mode
@@ -114,6 +122,7 @@ sequence:
             value_template: "{{ color_mode == 'RGB' }}"
         sequence:
           - service: light.turn_on
+            continue_on_error: true
             target:
               entity_id: !input light_entity
             data:
@@ -124,11 +133,23 @@ sequence:
             value_template: "{{ color_mode == 'Temperature' }}"
         sequence:
           - service: light.turn_on
+            continue_on_error: true
             target:
               entity_id: !input light_entity
             data:
               brightness: "{{ i_brightness }}"
               kelvin: !input initial_temp
+      - conditions:
+          - condition: template
+            value_template: "{{ color_mode == 'Adaptative' }}"
+        sequence:
+          - service: light.turn_on
+            continue_on_error: true
+            target:
+              entity_id: !input light_entity
+            data:
+              brightness: "{{ i_brightness }}"
+              kelvin: "{{ state_attr('!input adaptative_light_entity', 'color_temp_kelvin' }}"
 
   # Wait for light to turn on
   - wait_for_trigger:
@@ -154,6 +175,7 @@ sequence:
                   value_template: "{{ color_mode == 'RGB' }}"
               sequence:
                 - service: light.turn_on
+                  continue_on_error: true
                   target:
                     entity_id: !input light_entity
                   data:
@@ -167,10 +189,22 @@ sequence:
                   value_template: "{{ color_mode == 'Temperature' }}"
               sequence:
                 - service: light.turn_on
+                  continue_on_error: true
                   target:
                     entity_id: !input light_entity
                   data:
                     brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
                     kelvin: "{{ (int(initial_temp) + (repeat.index * temp_step)) | int }}"
+            - conditions:
+                - condition: template
+                  value_template: "{{ color_mode == 'Adaptative' }}"
+              sequence:
+                - service: light.turn_on
+                  continue_on_error: true
+                  target:
+                    entity_id: !input light_entity
+                  data:
+                    brightness: "{{ (int(i_brightness) + (repeat.index * brightness_step)) | int }}"
+                    kelvin: "{{ state_attr('!input adaptative_light_entity', 'color_temp_kelvin' }}"
         - delay:
             seconds: !input step_time
